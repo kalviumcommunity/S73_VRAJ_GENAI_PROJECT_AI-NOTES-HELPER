@@ -20,30 +20,35 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const ZERO_LIMIT = parseInt(process.env.ZERO_LIMIT || "30", 10);
 const ONE_LIMIT = parseInt(process.env.ONE_LIMIT || "80", 10);
 
-// Build prompt dynamically
+// ---------------- Build prompt dynamically ----------------
 function buildPrompt(note, task, shotMode = "zero") {
   const wordCount = note.split(/\s+/).length;
   let userPrompt = "";
 
   let dynamicSystemPrompt = `
 You are an AI Notes Helper.
-- Always explain notes in simple language (student-friendly).
+- Always explain notes in simple, student-friendly language.
 `;
 
-  if (task === "explain") {
+  if (task === "cot") {
+    dynamicSystemPrompt += `
+- Use Chain of Thought reasoning: think aloud step by step before giving the final answer.
+- Clearly separate each reasoning step.
+- At the end, provide a concise summary or conclusion.
+- If applicable, use examples to illustrate each step.
+`;
+    userPrompt = `Note: "${note}"
+Explain this note step by step with reasoning (think aloud), then give a concise conclusion.`;
+  } else if (task === "explain") {
     if (wordCount <= ONE_LIMIT) {
-      dynamicSystemPrompt += "- For short notes, explain in detail using 4–6 sentences.\n";
       userPrompt = `Explain this note in detail: "${note}"`;
     } else {
-      dynamicSystemPrompt += "- For long notes, give concise summaries in 3 lines.\n";
       userPrompt = `Summarize this note in 3 lines: "${note}"`;
     }
-  }
-
-  if (task === "summarize") userPrompt = `Summarize this note in 2 lines: "${note}"`;
-  if (task === "bullets") userPrompt = `Convert this note into clear bullet points: "${note}"`;
-  if (task === "translate") userPrompt = `Translate this note to Hindi: "${note}"`;
-  if (task === "short") userPrompt = `Rewrite this note in 1 short sentence: "${note}"`;
+  } else if (task === "summarize") userPrompt = `Summarize this note in 2 lines: "${note}"`;
+  else if (task === "bullets") userPrompt = `Convert this note into clear bullet points: "${note}"`;
+  else if (task === "translate") userPrompt = `Translate this note to Hindi: "${note}"`;
+  else if (task === "short") userPrompt = `Rewrite this note in 1 short sentence: "${note}"`;
 
   let examples = "";
   if (shotMode === "one") {
@@ -88,7 +93,7 @@ app.post("/api/process", async (req, res) => {
     const aiResult = await model.generateContent(prompt);
     const text = aiResult?.response?.text ? aiResult.response.text() : "No response from model.";
 
-    // ---------------- Token Counting (approx using gpt-4 encoding) ----------------
+    // ---------------- Token Counting ----------------
     const enc = encoding_for_model("gpt-4"); // approximate token counting
     const promptTokens = enc.encode(prompt).length;
     const responseTokens = enc.encode(text).length;
