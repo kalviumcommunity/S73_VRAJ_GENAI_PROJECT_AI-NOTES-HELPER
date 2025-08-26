@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Notes Helper</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    textarea { width: 100%; height: 120px; margin-bottom: 10px; }
+    select, button { margin: 5px 0; padding: 5px; }
+    #output { margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
+    #tokensBox { margin-top: 10px; padding: 10px; border: 1px solid #666; border-radius: 5px; background: #eef; width: fit-content; }
+  </style>
 </head>
 <body>
   <h1>📘 AI Notes Helper</h1>
@@ -36,6 +43,13 @@
 
   <h2>Output:</h2>
   <div id="output"></div>
+
+  <div id="tokensBox" style="display:none;">
+    <strong>Token Usage:</strong>
+    <div id="promptTokens">Prompt: 0</div>
+    <div id="responseTokens">Response: 0</div>
+    <div id="totalTokens">Total: 0</div>
+  </div>
 
   <script src="script.js"></script>
 </body>
