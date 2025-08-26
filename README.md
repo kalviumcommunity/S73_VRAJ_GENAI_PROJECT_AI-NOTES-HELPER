@@ -88,8 +88,7 @@ Each point is done in its own **branch**.
 This project is not about building a big app.  
 It is just to **learn the 7 basic AI concepts** step by step:  
 - how prompting works,  
-- how examples guide the model,  
-- how embeddings + similarity can make search smarter.  
+- how examples guide the model  
 
 By checking each branch, you can **see the difference directly**.  
 It’s a clean, simple way to understand how to work with Gemini API for real projects later.  
