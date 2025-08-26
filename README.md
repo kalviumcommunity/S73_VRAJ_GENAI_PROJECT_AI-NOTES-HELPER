@@ -62,19 +62,24 @@ Each point is done in its own **branch**.
 
 ---
 
-### 6️⃣ Embeddings
-- Convert notes into **vectors** using embeddings.  
-- Store them for later use.  
-- Example: "Save vector form of ‘Photosynthesis’ note."
+### 6️⃣ Chain of Thought Prompting
+- Write a prompt **utilising the concept of Chain of Thought (CoT) prompting**.  
+- Encourage the model to **reason step by step** before giving the final answer.  
+- Example:  
+  - Prompt: "Explain how to solve this physics problem step by step."  
+  - The model shows reasoning first, then provides the final solution.  
+- In the video, explain **what CoT prompting is** and how you have **utilised it** in your project.
 
 ---
 
-### 7️⃣ Cosine Similarity (Search)
-- Use cosine similarity to find **closest matching note** to the query.  
+### 7️⃣ Tokens and Tokenization
+- **Log the number of tokens used** in the console/terminal after every AI call.  
+- Helps track **how much of your quota is used** and how models process text internally.  
 - Example:  
-  - Query: "What is Newton’s Law?"  
-  - System finds the most similar note from stored embeddings.  
-  - Sends it to Gemini for explanation.  
+  - Input note: "Hello"  
+  - Tokens used: Prompt = 47, Response = 102, Total = 149  
+- In the video, explain **what tokens are** and how **tokenization works**.  
+
 
 
 ---
