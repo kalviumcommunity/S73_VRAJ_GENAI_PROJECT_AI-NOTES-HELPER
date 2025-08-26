@@ -1,10 +1,11 @@
 async function processNote() {
   const note = document.getElementById("noteInput").value;
+  const task = document.getElementById("taskSelect").value;
 
   const response = await fetch("http://localhost:5000/api/process", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ note }),
+    body: JSON.stringify({ note, task, shotMode: "zero" }), // 🔴 currently only zero-shot
   });
 
   const data = await response.json();

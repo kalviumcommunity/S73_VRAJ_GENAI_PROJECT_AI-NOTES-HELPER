@@ -23,20 +23,48 @@ You are an AI Notes Helper.
 - If input is too long, give a summary instead of full detail.
 `;
 
+/**
+ * Build prompt dynamically based on task and shot mode.
+ */
+function buildPrompt(note, task, shotMode = "zero") {
+  let userPrompt = "";
+
+  // ---------- TASK OPTIONS ----------
+  if (task === "explain") userPrompt = `Explain this note: "${note}"`;
+  if (task === "summarize") userPrompt = `Summarize this note in 2 lines: "${note}"`;
+  if (task === "bullets") userPrompt = `Convert this note into clear bullet points: "${note}"`;
+  if (task === "translate") userPrompt = `Translate this note to Hindi: "${note}"`;
+  if (task === "short") userPrompt = `Rewrite this note in 1 short sentence: "${note}"`;
+
+  // ---------- SHOT MODES ----------
+  if (shotMode === "zero") {
+    return `
+System: ${SYSTEM_PROMPT}
+User: ${userPrompt}
+`;
+  }
+
+  // 🔴 Future scope (not implemented yet) → "one", "few", "multi"
+  // if (shotMode === "one") { ... add one example ... }
+  // if (shotMode === "few") { ... add few examples ... }
+  // if (shotMode === "multi") { ... add multiple examples ... }
+
+  return `
+System: ${SYSTEM_PROMPT}
+User: ${userPrompt}
+`; // fallback → zero-shot
+}
+
 app.post("/api/process", async (req, res) => {
   try {
-    const { note } = req.body;
+    const { note, task, shotMode } = req.body;
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const prompt = `
-System: ${SYSTEM_PROMPT}
-User: Explain this note: "${note}"
-`;
+    const prompt = buildPrompt(note, task, shotMode);
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = result.response.text();
 
     res.json({ output: text });
   } catch (error) {
