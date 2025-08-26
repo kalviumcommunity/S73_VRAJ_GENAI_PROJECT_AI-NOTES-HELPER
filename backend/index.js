@@ -19,43 +19,45 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const ZERO_LIMIT = parseInt(process.env.ZERO_LIMIT || "30", 10);
 const ONE_LIMIT = parseInt(process.env.ONE_LIMIT || "80", 10);
 
-// System Prompt
-const SYSTEM_PROMPT = `
-You are an AI Notes Helper.
-- Always explain notes in simple language (student-friendly).
-- Keep answers short (2–3 sentences).
-- If input is too long, give a summary instead of full detail.
-`;
-
 /**
- * Build prompt dynamically based on task and shot mode.
+ * Build prompt dynamically based on task, shot mode, and word count.
  */
 function buildPrompt(note, task, shotMode = "zero") {
+  const wordCount = note.split(/\s+/).length;
   let userPrompt = "";
+  
+  // ---------- Dynamic system prompt ----------
+  let dynamicSystemPrompt = `
+You are an AI Notes Helper.
+- Always explain notes in simple language (student-friendly).
+`;
 
-  // ---------- TASK OPTIONS ----------
-  if (task === "explain") userPrompt = `Explain this note: "${note}"`;
+  // Dynamic prompting for explain task
+  if (task === "explain") {
+    if (wordCount <= ONE_LIMIT) {
+      dynamicSystemPrompt += "- For short notes, explain in detail using 4–6 sentences.\n";
+      userPrompt = `Explain this note in detail: "${note}"`;
+    } else {
+      dynamicSystemPrompt += "- For long notes, give concise summaries in 3 lines.\n";
+      userPrompt = `Summarize this note in 3 lines: "${note}"`;
+    }
+  }
+
   if (task === "summarize") userPrompt = `Summarize this note in 2 lines: "${note}"`;
   if (task === "bullets") userPrompt = `Convert this note into clear bullet points: "${note}"`;
   if (task === "translate") userPrompt = `Translate this note to Hindi: "${note}"`;
   if (task === "short") userPrompt = `Rewrite this note in 1 short sentence: "${note}"`;
 
   // ---------- SHOT MODES ----------
-  if (shotMode === "zero") {
-    return `System: ${SYSTEM_PROMPT}\nUser: ${userPrompt}`;
-  }
-
+  let examples = "";
   if (shotMode === "one") {
-    const oneShotExample = `
+    examples = `
 Example:
 Note: "Photosynthesis"
 Output: "Plants make their own food."
 `;
-    return `System: ${SYSTEM_PROMPT}${oneShotExample}\nUser: ${userPrompt}`;
-  }
-
-    if (shotMode === "multi") {
-    const multiShotExamples = `
+  } else if (shotMode === "multi") {
+    examples = `
 Example 1:
 Note: "Gravity"
 Output: "Objects are pulled towards Earth."
@@ -64,12 +66,9 @@ Example 2:
 Note: "Evaporation"
 Output: "Water turns into vapor when heated."
 `;
-    return `System: ${SYSTEM_PROMPT}${multiShotExamples}\nUser: ${userPrompt}`;
   }
 
-
-
-  return `System: ${SYSTEM_PROMPT}\nUser: ${userPrompt}`;
+  return `System: ${dynamicSystemPrompt}${examples}\nUser: ${userPrompt}`;
 }
 
 app.post("/api/process", async (req, res) => {
