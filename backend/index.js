@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { encoding_for_model } from "@dqbd/tiktoken"; // token counting
 
 dotenv.config();
 
@@ -19,20 +20,16 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const ZERO_LIMIT = parseInt(process.env.ZERO_LIMIT || "30", 10);
 const ONE_LIMIT = parseInt(process.env.ONE_LIMIT || "80", 10);
 
-/**
- * Build prompt dynamically based on task, shot mode, and word count.
- */
+// Build prompt dynamically
 function buildPrompt(note, task, shotMode = "zero") {
   const wordCount = note.split(/\s+/).length;
   let userPrompt = "";
-  
-  // ---------- Dynamic system prompt ----------
+
   let dynamicSystemPrompt = `
 You are an AI Notes Helper.
 - Always explain notes in simple language (student-friendly).
 `;
 
-  // Dynamic prompting for explain task
   if (task === "explain") {
     if (wordCount <= ONE_LIMIT) {
       dynamicSystemPrompt += "- For short notes, explain in detail using 4–6 sentences.\n";
@@ -48,7 +45,6 @@ You are an AI Notes Helper.
   if (task === "translate") userPrompt = `Translate this note to Hindi: "${note}"`;
   if (task === "short") userPrompt = `Rewrite this note in 1 short sentence: "${note}"`;
 
-  // ---------- SHOT MODES ----------
   let examples = "";
   if (shotMode === "one") {
     examples = `
@@ -71,33 +67,44 @@ Output: "Water turns into vapor when heated."
   return `System: ${dynamicSystemPrompt}${examples}\nUser: ${userPrompt}`;
 }
 
+// ---------------- Process Note Endpoint with Token Logging ----------------
 app.post("/api/process", async (req, res) => {
   try {
-    let { note, task, shotMode } = req.body;
+    const { note, task, shotMode } = req.body;
+    if (!note || !task) return res.status(400).json({ error: "Note and task are required." });
 
-    // Validate input
-    if (!note || !task) {
-      return res.status(400).json({ error: "Note and task are required." });
+    let finalShotMode = shotMode || "auto";
+    const wordCount = note.split(/\s+/).length;
+    if (finalShotMode === "auto") {
+      if (wordCount <= ZERO_LIMIT) finalShotMode = "zero";
+      else if (wordCount <= ONE_LIMIT) finalShotMode = "one";
+      else finalShotMode = "multi";
     }
 
-    // Auto-decide shot mode if not provided or set to "auto"
-    if (!shotMode || shotMode === "auto") {
-      const wordCount = note.split(/\s+/).length;
-      if (wordCount <= ZERO_LIMIT) shotMode = "zero";
-      else if (wordCount <= ONE_LIMIT) shotMode = "one";
-      else shotMode = "multi";
-    }
+    const prompt = buildPrompt(note, task, finalShotMode);
 
+    // ---------------- Generate AI Content ----------------
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = buildPrompt(note, task, shotMode);
+    const aiResult = await model.generateContent(prompt);
+    const text = aiResult?.response?.text ? aiResult.response.text() : "No response from model.";
 
-    const result = await model.generateContent(prompt);
-    const text = result?.response?.text ? result.response.text() : "No response from model.";
+    // ---------------- Token Counting (approx using gpt-4 encoding) ----------------
+    const enc = encoding_for_model("gpt-4"); // approximate token counting
+    const promptTokens = enc.encode(prompt).length;
+    const responseTokens = enc.encode(text).length;
+    const totalTokens = promptTokens + responseTokens;
+
+    console.log(`🟢 Token Usage: Prompt = ${promptTokens}, Response = ${responseTokens}, Total = ${totalTokens}`);
 
     res.json({
       output: text,
-      usedShot: shotMode,
-      wordCount: note.split(/\s+/).length
+      usedShot: finalShotMode,
+      wordCount,
+      tokens: {
+        promptTokens,
+        responseTokens,
+        totalTokens
+      }
     });
   } catch (error) {
     console.error("Backend error:", error);
