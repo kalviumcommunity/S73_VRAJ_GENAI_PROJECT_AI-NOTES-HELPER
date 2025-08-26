@@ -3,14 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Notes Helper - System/User Prompt</title>
+  <title>AI Notes Helper</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>📘 AI Notes Helper</h1>
+
   <textarea id="noteInput" placeholder="Enter your note here..."></textarea>
+
+  <div>
+    <label for="taskSelect">Choose Task:</label>
+    <select id="taskSelect">
+      <option value="explain">Explain</option>
+      <option value="summarize">Summarize</option>
+      <option value="bullets">Bullets</option>
+      <option value="translate">Translate (to Hindi)</option>
+      <option value="short">Short (1 sentence)</option>
+    </select>
+  </div>
+
   <button onclick="processNote()">Process</button>
+
+  <h2>Output:</h2>
   <div id="output"></div>
+
   <script src="script.js"></script>
 </body>
 </html>
