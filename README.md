@@ -23,7 +23,6 @@ Each point is done in its own **branch**.
 ---
 
 ### 1️⃣ System + User Prompt
-- **Branch:** `feature/system-user-prompt`  
 - Example of using both **system** (instructions for model behavior) + **user input**.  
 - Example:  
   - System: "You are a notes helper. Always explain simply."  
@@ -33,15 +32,13 @@ Each point is done in its own **branch**.
 ---
 
 ### 2️⃣ Zero-Shot Prompting
-- **Branch:** `feature/zero-shot`  
 - Directly ask Gemini without any examples.  
 - Example:  
   > "Summarize this note in 2 lines: <note_text>"
 
 ---
 
-### 3️⃣ One-Shot Prompting
-- **Branch:** `feature/one-shot`  
+### 3️⃣ One-Shot Prompting  
 - Give **one example** to guide the model.  
 - Example:  
   > Example: "Photosynthesis → Plants make their own food."  
@@ -49,8 +46,7 @@ Each point is done in its own **branch**.
 
 ---
 
-### 4️⃣ Multi-Shot Prompting
-- **Branch:** `feature/multi-shot`  
+### 4️⃣ Multi-Shot Prompting 
 - Give **multiple examples** for better learning.  
 - Example:  
   > Example 1: "Newton’s Law → Objects keep moving unless stopped."  
@@ -60,7 +56,6 @@ Each point is done in its own **branch**.
 ---
 
 ### 5️⃣ Dynamic Prompting
-- **Branch:** `feature/dynamic-prompt`  
 - Prompt changes based on **input length**.  
 - If text is short → "Explain in detail."  
 - If text is long → "Summarize in 3 lines."
@@ -68,7 +63,6 @@ Each point is done in its own **branch**.
 ---
 
 ### 6️⃣ Embeddings
-- **Branch:** `feature/embeddings`  
 - Convert notes into **vectors** using embeddings.  
 - Store them for later use.  
 - Example: "Save vector form of ‘Photosynthesis’ note."
@@ -76,7 +70,6 @@ Each point is done in its own **branch**.
 ---
 
 ### 7️⃣ Cosine Similarity (Search)
-- **Branch:** `feature/cosine-similarity`  
 - Use cosine similarity to find **closest matching note** to the query.  
 - Example:  
   - Query: "What is Newton’s Law?"  
