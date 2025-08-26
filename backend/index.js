@@ -15,6 +15,10 @@ app.use(bodyParser.json());
 // Gemini Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Configurable thresholds
+const ZERO_LIMIT = parseInt(process.env.ZERO_LIMIT || "30", 10);
+const ONE_LIMIT = parseInt(process.env.ONE_LIMIT || "80", 10);
+
 // System Prompt
 const SYSTEM_PROMPT = `
 You are an AI Notes Helper.
@@ -38,38 +42,54 @@ function buildPrompt(note, task, shotMode = "zero") {
 
   // ---------- SHOT MODES ----------
   if (shotMode === "zero") {
-    return `
-System: ${SYSTEM_PROMPT}
-User: ${userPrompt}
-`;
+    return `System: ${SYSTEM_PROMPT}\nUser: ${userPrompt}`;
   }
 
-  // 🔴 Future scope (not implemented yet) → "one", "few", "multi"
-  // if (shotMode === "one") { ... add one example ... }
-  // if (shotMode === "few") { ... add few examples ... }
-  // if (shotMode === "multi") { ... add multiple examples ... }
+  if (shotMode === "one") {
+    const oneShotExample = `
+Example:
+Note: "Photosynthesis"
+Output: "Plants make their own food."
+`;
+    return `System: ${SYSTEM_PROMPT}${oneShotExample}\nUser: ${userPrompt}`;
+  }
 
-  return `
-System: ${SYSTEM_PROMPT}
-User: ${userPrompt}
-`; // fallback → zero-shot
+
+
+  return `System: ${SYSTEM_PROMPT}\nUser: ${userPrompt}`;
 }
 
 app.post("/api/process", async (req, res) => {
   try {
-    const { note, task, shotMode } = req.body;
+    let { note, task, shotMode } = req.body;
+
+    // Validate input
+    if (!note || !task) {
+      return res.status(400).json({ error: "Note and task are required." });
+    }
+
+    // Auto-decide shot mode if not provided or set to "auto"
+    if (!shotMode || shotMode === "auto") {
+      const wordCount = note.split(/\s+/).length;
+      if (wordCount <= ZERO_LIMIT) shotMode = "zero";
+      else if (wordCount <= ONE_LIMIT) shotMode = "one";
+      else shotMode = "multi";
+    }
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const prompt = buildPrompt(note, task, shotMode);
 
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const text = result?.response?.text ? result.response.text() : "No response from model.";
 
-    res.json({ output: text });
+    res.json({
+      output: text,
+      usedShot: shotMode,
+      wordCount: note.split(/\s+/).length
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
+    console.error("Backend error:", error);
+    res.status(500).json({ error: "Something went wrong on the server." });
   }
 });
 
