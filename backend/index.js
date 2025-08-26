@@ -54,6 +54,19 @@ Output: "Plants make their own food."
     return `System: ${SYSTEM_PROMPT}${oneShotExample}\nUser: ${userPrompt}`;
   }
 
+    if (shotMode === "multi") {
+    const multiShotExamples = `
+Example 1:
+Note: "Gravity"
+Output: "Objects are pulled towards Earth."
+
+Example 2:
+Note: "Evaporation"
+Output: "Water turns into vapor when heated."
+`;
+    return `System: ${SYSTEM_PROMPT}${multiShotExamples}\nUser: ${userPrompt}`;
+  }
+
 
 
   return `System: ${SYSTEM_PROMPT}\nUser: ${userPrompt}`;
